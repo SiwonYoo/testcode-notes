@@ -1,51 +1,151 @@
-# 실무에 바로 적용하는 프런트엔드 테스트 쇼핑몰 예제
+# 섹션 1. 프론트엔드 테스트 작성 준비하기
 
-<!-- TODO: need to update link -->
+## 1.1 테스트가 당신의 코드에 미치는 영향
 
-> 강의 링크: https://www.inflearn.com/
+### **테스트란?**
 
-이 프로젝트는 "실무에 바로 적용하는 프런트엔드 테스트"에서 사용되는 예제입니다.
+- 애플리케이션의 **품질과 안정성**을 높이기 위해 사전에 결함을 찾아내고 수정하기 위한 행위
+- 주로 특정 모듈(특히 컴포넌트)이 **사양에 맞게 작동하는지 자동화된 방식**으로 검증
+- 올바른 테스트 작성에 대한 개발자의 이해가 있어야 하며, **개발 비용이 증가**할 수 있다.
 
-![image](https://github.com/jung-han/jung-han/assets/35371660/86f96b11-046d-42dd-bb8d-3b780698feeb)
+### **테스트 코드의 효과**
 
-## 사용 기술 스택
+**1. 좋은 설계에 대한 사고를 돕는다.**
 
-| Types      | Techs                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Front      | ![React](https://img.shields.io/badge/react-%2320232a.svg?style=flat&logo=react&logoColor=%2361DAFB) ![Tanstack Query](https://img.shields.io/badge/-tanstack%20Query-FF4154?style=flat&logo=react%20query&logoColor=white) ![MUI](https://img.shields.io/badge/MUI-%230081CB.svg?style=flat&logo=mui&logoColor=white) ![React Hook Form](https://img.shields.io/badge/React%20Hook%20Form-%23EC5990.svg?style=flat&logo=reacthookform&logoColor=white) [zustand](https://github.com/pmndrs/zustand) |
-| Server     | ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=flat&logo=express&logoColor=%2361DAFB)                                                                                                                                                                                                                                                                                                                                                                                     |
-| Build tool | ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=flat&logo=vite&logoColor=white)                                                                                                                                                                                                                                                                                                                                                                                                        |
-| Test       | ![cypress](https://img.shields.io/badge/-cypress-%23E5E5E5?style=flat&logo=cypress&logoColor=058a5e) ![Testing-Library](https://img.shields.io/badge/-Testing%20Library-%23E33332?style=flat&logo=testing-library&logoColor=white) ![Storybook](https://img.shields.io/badge/-Storybook-FF4785?style=flat&logo=storybook&logoColor=white) [MSW](https://mswjs.io/) [Chromatic](https://www.chromatic.com/)                                                                                           |
+- **결합도(coupling)**: 한 모듈이 다른 모듈에 의존하는 정도 → 낮을수록 좋다.
+- 결합도가 높으면 한 모듈 수정 시 다른 모듈에도 영향을 줄 수 있다. (하나의 페이지에서 모든 비즈니스 로직을 개발하는 경우)
+  - 특정 기능만 따로 검증하기 어렵다.
+  - 복잡한 구조로 필요한 테스트가 누락될 수 있다.
+  - 여러 테스트 코드를 계속 수정해야 한다.
+- ⇒ 테스트 단위를 나누는 과정에서 자연스럽게 **의존성을 줄이고 올바른 설계**를 고민하게 된다. 즉, 더 넓은 사고를 가지게 된다.
 
-## 실행
+**2.  테스트 코드를 기반으로 빠르고 안정적이게 리팩토링할 수 있다.**
 
-```sh
-$ nvm use # node 19.9.0 버전을 사용합니다.
-$ npm i
-$ npm run dev # 노드 서버와 vite 개발 서버를 동시에 실행합니다.
+- **리팩토링**: 결과의 변경 없이 코드의 구조를 재조정하는 것
+- 거대한 리팩토링 범위를 가진 모듈은 문제가 발생했을 때 원인 파악이 어렵다.
+- 작은 단위로 나누면 작업 속도도 빨라지고, 문제 범위도 좁아져서 쉽게 해결할 수 있다.
+  > "한 가지를 수정할 때마다 테스트하면, 오류가 생기더라도 변경 폭이 작기 때문에 살펴볼 범위도 좁아서 문제를 찾고 해결하기가 훨씬 쉽다. 이처럼 조금씩 변경하고 매번 테스트하는 것은 리팩터링 절차의 핵심이다."
+- 잘 작성된 테스트 코드가 있으면 리팩토링뿐 아니라 **새로운 기능 추가 시 사이드이펙트를 방지**할 수 있다.
+  - 물론, 새로운 기능에 대한 테스트 코드 작성은 필요하다.
+
+**3. 좋은 테스트 코드는 애플리케이션의 이해를 돕는 문서가 된다.**
+
+- 잘 작성된 테스트 코드는 **애플리케이션의 동작을 설명하는 문서**로 활용될 수 있다.
+
+![](https://blog.kakaocdn.net/dna/cYxuKi/btsQWSQCS60/AAAAAAAAAAAAAAAAAAAAAErqjMMVE3_mHvyHDfC76cNwjhxpMLLEKD7qhvtB8Cvy/img.png?credential=yqXZFxpELC7KVnFOS48ylbz2pIh7yKj8&expires=1759244399&allow_ip=&allow_referer=&signature=r%2B2WbUGX9oVL%2FFpv0bRXgXQym%2FY%3D)
+
+---
+
+## 1.2 올바른 테스트 작성을 위한 규칙
+
+모든 프론트엔드 테스트에 공통적으로 적용되는 기본 규칙이다.
+
+### ① 인터페이스를 기준으로 테스트를 작성하자.
+
+- **인터페이스**: 서로 다른 클래스 또는 모듈이 상호작용하는 시스템
+- 모든 테스트는 세부 구현이 아니라 외부에 노출되는 퍼블릭 메서드(인터페이스)를 기준으로 작성해야 한다.
+- 내부 구현을 직접 테스트하는 것은 **캡슐화를 위반**하며, 깨지기 쉬운 테스트를 만든다.
+
+**내부 구현을 기준으로 작성한 테스트의 문제점**
+
+- 불필요하게 많은 테스트 코드가 양산된다.
+- 내부 구현과 강한 의존성을 가지므로, 구현이 조금만 변경되어도 테스트가 깨진다.
+- 유지보수 비용이 크다.
+- Ex. 리액트 컴포넌트: 내부의 상태를 강제로 직접 변경하면 안된다. 컴포넌트와 통신할 수 있는 **외부의 인터페이스를 통해 변경**되는지 검증해야 한다.
+
+**잘못된 테스트**
+
+```jsx
+// ❌ 잘못된 테스트 코드
+it('isShowModal 상태를 true로 변경했을 때 ModalComponent의 display 스타일이 block이며, "안녕하세요!" 텍스트가 노출된다.', () => {
+  // 구현에 종속적인 코드와 복잡한 상태 변경 코드들이 발생할 수 있다.
+  SpecificComponent.setState({ isShowModal: true });
+});
 ```
 
-## 브랜치 소개
+- 변경되는 상태가 많은 경우 테스트 코드 상에서 일일이 직접 변경해야 하며, **어떤 상황에서 변경되는 것인지 드러나지 않는다**.
+- 어떤 것을 검증하는지 테스트 코드만 보고 한 눈에 파악하기 어렵다.
+- 구현에 종속적인 테스트 코드가 양산된다. 상태나 변수명이 하나라도 바뀌면 테스트 코드 모두를 바꿔야 한다. 즉, 캡슐화를 위반하는 코드가 된다.
+  - `isShowModal` 변수명이 변경되면 테스트 코드에서도 변경해야 한다.
 
-각 장에서 사용하는 브랜치와 정답 브랜치입니다.
-강의를 진행 하실 때는 `강의` 브랜치를, 테스트를 작성하고 정답을 확인하고 싶으시다면 `정답` 브랜치를 확인해주세요!
+그럼 컴포넌트에서 상태를 변경할 수 있도록 제공되는 인터페이스는 무엇일까? ⇒ **DOM 이벤트 핸들러**
 
-> ⚠️ 강의를 시작할 때 강사님이 어느 브랜치를 사용하는지 알려드리니 참고해서 진행해주세요!
+**올바른 테스트**
 
-<!-- TODO: 브랜치 링크 넣기 -->
+```jsx
+// 🔵 올바른 테스트 코드
+it('버튼을 누르면 모달을 띄운다.', () => {
+  // 유저의 동작과 비슷하도록 클릭 이벤트를 발생
+  user.click(screen.getByRole('button'));
+});
+```
 
-### 1부
+- 내부 구현과 종속성이 없으며 캡슐화에 위반되지 않는다.
+- 어떤 행위를 하는지 명확하다.
+- 테스트를 설명하기 위한 불필요한 주석이나 설명이 필요 없다.
 
-- 2장. 단위 테스트란?
-  - 강의: [`unit-test-example`](https://github.com/practical-fe-testing/test-example-shopping-mall/tree/unit-test-example)
-  - 정답: [`unit-test-example-with-answer`](https://github.com/practical-fe-testing/test-example-shopping-mall/tree/unit-test-example-with-answer)
-- 3장. 단위 테스트 작성하기
-  - 강의: [`shopping-mall-unit-test`](https://github.com/practical-fe-testing/test-example-shopping-mall/tree/shopping-mall-unit-test)
-  - 정답: [`shopping-mall-unit-test-with-answer`](https://github.com/practical-fe-testing/test-example-shopping-mall/tree/shopping-mall-unit-test-with-answer)
-- 4장. 통합 테스트란? / 5장. 통합 테스트 작성하기
-  - 강의: [`shopping-mall-integration-test`](https://github.com/practical-fe-testing/test-example-shopping-mall/tree/shopping-mall-integration-test)
-  - 정답: [`shopping-mall-integration-test-with-answer`](shopping-mall-integration-test-with-answer)
+### ② 커버리지 보다는 의미있는 테스트인지 고민하자.
 
-### 2부
+- **커버리지**: 테스트 코드가 프로덕션 코드의 몇 %를 검증하는지 나타내는 지표 (기준: 구문, 분기, 함수, 줄 등)
+- 흔한 실수: 100% 커버리지를 목표로 모든 코드를 검증하려는 것
+  - 현실적으로 100% 커버리지로 작성하는 것은 불가능하며, 가능하다 해도 테스트 작성, 실행, 유지 보수 비용이 크다.
+  - 커버리지 100%여도 잘못된 검증 때문에 문제가 발생할 수 있다.
+- 단순한 연산 함수는 과감히 생략 → 더 큰 모듈이나 컴포넌트 테스트 안에서 함께 검증하는 것이 효율적
+- 100% 커버리지를 위한 테스트보다는 **의미있는 테스트인지**, **어떤 범위까지 검증해야 효율적인 테스트가 될지**를 고민해야 한다.
 
-- 작성 예정
+### ③ 가독성을 높이자. 테스트 코드도 유지 보수 대상이다.
+
+- 테스트하고자 하는 내용을 명확히 작성해야 한다.
+
+  ```jsx
+  // ❌ 잘못된 테스트 코드
+  it('리스트에서 항목이 제대로 삭제된다.', () => { ... })
+
+  // 🔵 올바른 테스트 코드
+  it('항목들을 체크한 후 삭제 버튼을 누르면 리스트에서 체크된 항목들이 삭제된다.', () => { ... })
+  ```
+
+- 하나의 테스트에서는 가급적 하나의 동작만 검증해야 한다.
+  - **단일 책임 원칙(SRP, Single Responsibility Principle)**: 모든 클래스는 하나의 책임을 갖고 그와 관련된 책임을 캡슐화하여 **변경에 견고한 코드**를 만들어야 한다.  
+    ⇒ 테스트에서도 동일하다. **검증 범위의 책임을 나누는 것**이 중요하다.
+  - 다양한 컴포넌트들이 조합되었을 때의 시나리오를 검증해야 한다면 하나의 케이스에서 한 번에 검증하는 것이 아닌, **여러 개로 나눠 검증**하는 것이 가독성에 좋다.
+    ```jsx
+    // ❌ 잘못된 테스트 코드
+    // - 가격 로직에 대한 로직만 수정되어도 테스트 자체가 깨지게 된다.
+    // - 어떤 동작에서 실패했는지 찾기 어렵다.
+    it('장바구니에 담긴 상품들이 정상적으로 노출되고, 수량을 변경하면 가격이 재계산된다. 그리고 삭제 버튼을 누르면 상품이 삭제된다.', () => { ... })
+    ```
+    ```jsx
+    // 🔵 올바른 테스트 코드
+    // - 각 검증의 책임이 명확하게 나눠져 있다.
+    // - 유지보수가 쉽고 가독성이 좋다.
+    it('장바구니에 담긴 상품들을 정상적으로 렌더링한다.', () => { ... })
+    it('장바구니에 담긴 상품의 수량을 수정하면 가격이 재계산된다.', () => { ... })
+    it('장바구니에 담긴 항목의 삭제 버튼을 누르면 리스트에서 삭제된다.', () => { ... })
+    ```
+
+---
+
+## 1.3 예제 프로젝트 소개
+
+**사용 기술 스택**
+
+- Front: `react` `tanstack Query` `MUI` `React Hook Form` `zustand`
+- Server: `express.js`
+- Build tool: `vite`
+- Test: `vitest` `cypress` `Testing Library` `Storybook` `MSW Chromatic`
+
+---
+
+## 섹션 1. 퀴즈
+
+- Q: 테스트 코드가 애플리케이션 코드에 주는 주요 이점은 무엇일까요?  
+  A: 앱 품질 향상 및 안정성 증대
+- Q: 테스트 코드가 리팩터링 과정에 어떤 긍정적인 영향을 줄까요?  
+  A: 변경 사항이 기존 기능을 해치지 않는지 빠르게 검증한다.
+- Q: 올바른 테스트 코드 작성을 위해 권장되는 주요 접근 방식은 무엇일까요?  
+  A: 공개된 인터페이스 또는 메서드 기반으로 테스트한다.
+- Q: 테스트 코드 작성 시, 단순히 높은 커버리지 숫자를 달성하는 것보다 더 중요하게 고려해야 할 것은 무엇일까요?  
+  A: 실제로 중요한 기능이나 로직을 검증하는 의미 있는 테스트를 작성하는 것
+- Q: 좋은 테스트 코드가 갖춰야 할 가독성 원칙 중, 단일 책임 원칙에 따라 권장되는 사항은 무엇일까요?  
+  A: 하나의 테스트는 하나의 특정 동작만 검증한다.
