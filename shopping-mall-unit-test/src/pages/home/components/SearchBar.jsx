@@ -1,12 +1,12 @@
-import SearchIcon from '@mui/icons-material/Search';
+import SearchIcon from "@mui/icons-material/Search";
 import {
   InputAdornment,
   IconButton,
   InputLabel,
   OutlinedInput,
   FormControl,
-} from '@mui/material';
-import React from 'react';
+} from "@mui/material";
+import React from "react";
 
 const SearchBar = ({ onChangeInput }) => {
   return (

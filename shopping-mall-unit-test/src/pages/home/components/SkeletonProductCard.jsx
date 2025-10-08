@@ -6,8 +6,8 @@ import {
   Typography,
   Grid,
   Skeleton,
-} from '@mui/material';
-import React from 'react';
+} from "@mui/material";
+import React from "react";
 
 const SkeletonProductCard = () => (
   <Grid item xs={6} sm={6} md={3}>

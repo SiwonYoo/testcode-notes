@@ -1,15 +1,15 @@
-import { apiRoutes } from '@/apiRoutes';
-import { api } from '@/helpers/axios';
-import { useUserStore } from '@/store/user';
-import { pick } from '@/utils/common';
+import { apiRoutes } from "@/apiRoutes";
+import { api } from "@/helpers/axios";
+import { useUserStore } from "@/store/user";
+import { pick } from "@/utils/common";
 
 const level = {
-  INFO: 'INFO',
-  ERROR: 'ERROR',
+  INFO: "INFO",
+  ERROR: "ERROR",
 };
 
 const useLog = () => {
-  const { user } = useUserStore(state => pick(state, 'user'));
+  const { user } = useUserStore(state => pick(state, "user"));
 
   const sendInfoLog = message => {
     const userId = user?.id;

@@ -1,5 +1,5 @@
-const { create: actualCreate } = await vi.importActual('zustand');
-import { act } from '@testing-library/react';
+const { create: actualCreate } = await vi.importActual("zustand");
+import { act } from "@testing-library/react";
 
 // 앱에 선언된 모든 스토어에 대해 재설정 함수를 저장
 const storeResetFns = new Set();

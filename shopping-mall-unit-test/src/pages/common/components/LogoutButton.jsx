@@ -1,12 +1,12 @@
-import { Button } from '@mui/material';
-import React from 'react';
+import { Button } from "@mui/material";
+import React from "react";
 
 const LogoutButton = ({ data, onClick }) => {
   return (
     <Button
       variant="text"
       size="large"
-      style={{ color: '#fff' }}
+      style={{ color: "#fff" }}
       onClick={onClick}
     >
       {data?.name}

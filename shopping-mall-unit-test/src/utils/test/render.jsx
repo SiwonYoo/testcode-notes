@@ -1,9 +1,9 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import React from 'react';
-import { Toaster } from 'react-hot-toast';
-import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import React from "react";
+import { Toaster } from "react-hot-toast";
+import { MemoryRouter } from "react-router-dom";
 
 export default async (component, options = {}) => {
   const { routerProps } = options;
@@ -21,7 +21,7 @@ export default async (component, options = {}) => {
       log: console.log,
       warn: console.warn,
       // ✅ no more errors on the console for tests
-      error: process.env.NODE_ENV === 'test' ? () => {} : console.error,
+      error: process.env.NODE_ENV === "test" ? () => {} : console.error,
     },
   });
 

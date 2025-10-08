@@ -1,26 +1,26 @@
-import CheckIcon from '@mui/icons-material/Check';
-import { Stack, Button } from '@mui/material';
-import React, { useRef } from 'react';
-import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import CheckIcon from "@mui/icons-material/Check";
+import { Stack, Button } from "@mui/material";
+import React, { useRef } from "react";
+import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
-import 'swiper/css';
-import 'swiper/css/navigation';
+import "swiper/css";
+import "swiper/css/navigation";
 
-import { pageRoutes } from '@/apiRoutes';
-import { TOAST_ID } from '@/constants';
-import { cartValidationMessages } from '@/messages';
-import CartButtonGroup from '@/pages/productDetail/components/CartButtonGroup';
-import { useCartStore } from '@/store/cart';
-import { useUserStore } from '@/store/user';
-import { pick } from '@/utils/common';
+import { pageRoutes } from "@/apiRoutes";
+import { TOAST_ID } from "@/constants";
+import { cartValidationMessages } from "@/messages";
+import CartButtonGroup from "@/pages/productDetail/components/CartButtonGroup";
+import { useCartStore } from "@/store/cart";
+import { useUserStore } from "@/store/user";
+import { pick } from "@/utils/common";
 
 const PurchaseSelection = ({ product }) => {
   const navigate = useNavigate();
   const countRef = useRef(0);
-  const { addCartItem } = useCartStore(state => pick(state, 'addCartItem'));
+  const { addCartItem } = useCartStore(state => pick(state, "addCartItem"));
   const { user, isLogin } = useUserStore(state =>
-    pick(state, 'user', 'isLogin'),
+    pick(state, "user", "isLogin"),
   );
 
   const purchaseProduct = () => {

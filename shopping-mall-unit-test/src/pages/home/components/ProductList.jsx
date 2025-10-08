@@ -1,29 +1,29 @@
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { Grid, Button } from '@mui/material';
-import React from 'react';
-import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { Grid, Button } from "@mui/material";
+import React from "react";
+import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
-import { pageRoutes } from '@/apiRoutes';
-import { TOAST_ID } from '@/constants';
-import ProductCard from '@/pages/home/components/ProductCard';
-import useProducts from '@/pages/home/hooks/useProducts';
-import { useCartStore } from '@/store/cart';
-import { useFilterStore } from '@/store/filter';
-import { useUserStore } from '@/store/user';
-import { pick } from '@/utils/common';
+import { pageRoutes } from "@/apiRoutes";
+import { TOAST_ID } from "@/constants";
+import ProductCard from "@/pages/home/components/ProductCard";
+import useProducts from "@/pages/home/hooks/useProducts";
+import { useCartStore } from "@/store/cart";
+import { useFilterStore } from "@/store/filter";
+import { useUserStore } from "@/store/user";
+import { pick } from "@/utils/common";
 
 const PRODUCT_PAGE_LIMIT = 20;
 
 const ProductList = ({ limit = PRODUCT_PAGE_LIMIT }) => {
   const navigate = useNavigate();
   const filter = useFilterStore(state =>
-    pick(state, 'categoryId', 'title', 'minPrice', 'maxPrice'),
+    pick(state, "categoryId", "title", "minPrice", "maxPrice"),
   );
   const { user, isLogin } = useUserStore(state =>
-    pick(state, 'user', 'isLogin'),
+    pick(state, "user", "isLogin"),
   );
-  const { addCartItem } = useCartStore(state => pick(state, 'addCartItem'));
+  const { addCartItem } = useCartStore(state => pick(state, "addCartItem"));
 
   const { data, ...productsMethods } = useProducts({
     limit,

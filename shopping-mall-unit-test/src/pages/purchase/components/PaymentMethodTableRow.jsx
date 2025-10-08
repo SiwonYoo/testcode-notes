@@ -5,16 +5,16 @@ import {
   FormControlLabel,
   TableCell,
   TableRow,
-} from '@mui/material';
-import React from 'react';
-import { useFormContext, Controller } from 'react-hook-form';
+} from "@mui/material";
+import React from "react";
+import { useFormContext, Controller } from "react-hook-form";
 
 const PaymentMethodTableRow = () => {
   const { control } = useFormContext();
 
   return (
     <TableRow>
-      <TableCell style={{ fontWeight: 'bold', width: '30%' }}>
+      <TableCell style={{ fontWeight: "bold", width: "30%" }}>
         결제 방법
       </TableCell>
       <TableCell>

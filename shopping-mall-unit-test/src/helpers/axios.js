@@ -1,19 +1,19 @@
-import axios from 'axios';
-import Cookies from 'js-cookie';
+import axios from "axios";
+import Cookies from "js-cookie";
 
 export const client = (() =>
   axios.create({
-    baseURL: 'http://localhost:3000/',
+    baseURL: "http://localhost:3000/",
     timeout: 20000,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
-      'Access-Control-Allow-Headers': 'Authorization',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE",
+      "Access-Control-Allow-Headers": "Authorization",
     },
   }))();
 
 export const headers = () => {
-  const accessToken = Cookies.get('access_token');
+  const accessToken = Cookies.get("access_token");
 
   if (accessToken) {
     return {

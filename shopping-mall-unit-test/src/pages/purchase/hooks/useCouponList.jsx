@@ -1,12 +1,12 @@
-import { useWatch } from 'react-hook-form';
+import { useWatch } from "react-hook-form";
 
-import { apiRoutes } from '@/apiRoutes';
-import { NO_COUPON_ID } from '@/constants';
-import { useFetch } from '@/helpers/reactQuery';
-import { pathToUrl } from '@/helpers/url';
+import { apiRoutes } from "@/apiRoutes";
+import { NO_COUPON_ID } from "@/constants";
+import { useFetch } from "@/helpers/reactQuery";
+import { pathToUrl } from "@/helpers/url";
 
 const useCouponList = options => {
-  const selectedCouponId = useWatch({ name: 'coupon' });
+  const selectedCouponId = useWatch({ name: "coupon" });
   const { data, isLoading } = useFetch({
     url: pathToUrl(apiRoutes.couponList),
     options,

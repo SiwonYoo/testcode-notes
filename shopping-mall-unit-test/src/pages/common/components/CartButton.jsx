@@ -1,9 +1,9 @@
-import { ShoppingCart } from '@mui/icons-material';
-import { Badge, IconButton } from '@mui/material';
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { ShoppingCart } from "@mui/icons-material";
+import { Badge, IconButton } from "@mui/material";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 
-import { pageRoutes } from '@/apiRoutes';
+import { pageRoutes } from "@/apiRoutes";
 
 const CartButton = ({ cart }) => {
   const navigate = useNavigate();

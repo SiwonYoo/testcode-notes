@@ -1,17 +1,17 @@
-import { Box, Container } from '@mui/material';
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { shallow } from 'zustand/shallow';
+import { Box, Container } from "@mui/material";
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { shallow } from "zustand/shallow";
 
-import { pageRoutes } from '@/apiRoutes';
-import NavigationBar from '@/pages/common/components/NavigationBar';
-import { useUserStore } from '@/store/user';
-import { pick } from '@/utils/common';
+import { pageRoutes } from "@/apiRoutes";
+import NavigationBar from "@/pages/common/components/NavigationBar";
+import { useUserStore } from "@/store/user";
+import { pick } from "@/utils/common";
 
 export const authStatusType = {
-  NEED_LOGIN: 'NEED_LOGIN',
-  NEED_NOT_LOGIN: 'NEED_NOT_LOGIN',
-  COMMON: 'COMMON',
+  NEED_LOGIN: "NEED_LOGIN",
+  NEED_NOT_LOGIN: "NEED_NOT_LOGIN",
+  COMMON: "COMMON",
 };
 
 const Layout = ({
@@ -20,7 +20,7 @@ const Layout = ({
   authStatus = authStatusType.COMMON,
 }) => {
   const { isLogin } = useUserStore(
-    state => pick(state, 'setIsLogin', 'isLogin'),
+    state => pick(state, "setIsLogin", "isLogin"),
     shallow,
   );
 

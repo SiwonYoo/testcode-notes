@@ -5,22 +5,22 @@ import {
   TableCell,
   FormControl,
   TableRow,
-} from '@mui/material';
-import React from 'react';
-import { useController, useFormContext } from 'react-hook-form';
+} from "@mui/material";
+import React from "react";
+import { useController, useFormContext } from "react-hook-form";
 
-import { NO_COUPON_ID } from '@/constants';
-import useCouponList from '@/pages/purchase/hooks/useCouponList';
+import { NO_COUPON_ID } from "@/constants";
+import useCouponList from "@/pages/purchase/hooks/useCouponList";
 
 const CouponListTableRow = () => {
   const { couponList } = useCouponList();
   const { control } = useFormContext();
-  const { field } = useController({ name: 'coupon', control });
+  const { field } = useController({ name: "coupon", control });
   const { value: selectedValue, onChange } = field;
 
   return (
     <TableRow>
-      <TableCell style={{ fontWeight: 'bold', width: '30%' }}>
+      <TableCell style={{ fontWeight: "bold", width: "30%" }}>
         할인쿠폰
       </TableCell>
       <TableCell>

@@ -1,8 +1,8 @@
-import { Typography } from '@mui/material';
-import React from 'react';
+import { Typography } from "@mui/material";
+import React from "react";
 
-import ProductImagesSwiper from '@/pages/productDetail/components/ProductImagesSwiper';
-import { formatPrice } from '@/utils/formatter';
+import ProductImagesSwiper from "@/pages/productDetail/components/ProductImagesSwiper";
+import { formatPrice } from "@/utils/formatter";
 
 const ProductInfoArea = ({ product }) => {
   return (

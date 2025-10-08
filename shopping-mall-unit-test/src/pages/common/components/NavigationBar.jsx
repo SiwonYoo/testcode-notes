@@ -1,33 +1,33 @@
-import { AppBar, Box, Toolbar, Typography, Skeleton } from '@mui/material';
-import Cookies from 'js-cookie';
-import React, { Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { AppBar, Box, Toolbar, Typography, Skeleton } from "@mui/material";
+import Cookies from "js-cookie";
+import React, { Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { pageRoutes } from '@/apiRoutes';
-import ApiErrorBoundary from '@/pages/common/components/ApiErrorBoundary';
-import CartButton from '@/pages/common/components/CartButton';
-import ConfirmModal from '@/pages/common/components/ConfirmModal';
-import LoginButton from '@/pages/common/components/LoginButton';
-import LogoutButton from '@/pages/common/components/LogoutButton';
-import useConfirmModal from '@/pages/common/hooks/useConfirmModal';
-import useProfile from '@/pages/common/hooks/useProfile';
-import { useCartStore } from '@/store/cart';
-import { useUserStore } from '@/store/user';
-import { pick } from '@/utils/common';
+import { pageRoutes } from "@/apiRoutes";
+import ApiErrorBoundary from "@/pages/common/components/ApiErrorBoundary";
+import CartButton from "@/pages/common/components/CartButton";
+import ConfirmModal from "@/pages/common/components/ConfirmModal";
+import LoginButton from "@/pages/common/components/LoginButton";
+import LogoutButton from "@/pages/common/components/LogoutButton";
+import useConfirmModal from "@/pages/common/hooks/useConfirmModal";
+import useProfile from "@/pages/common/hooks/useProfile";
+import { useCartStore } from "@/store/cart";
+import { useUserStore } from "@/store/user";
+import { pick } from "@/utils/common";
 
 const NavigationBar = () => {
   const navigate = useNavigate();
   const { isModalOpened, toggleIsModalOpened } = useConfirmModal();
   const { isLogin, setIsLogin, setUserData } = useUserStore(state =>
-    pick(state, 'isLogin', 'setIsLogin', 'setUserData'),
+    pick(state, "isLogin", "setIsLogin", "setUserData"),
   );
   const { cart, initCart } = useCartStore(state =>
-    pick(state, 'cart', 'initCart'),
+    pick(state, "cart", "initCart"),
   );
   const handleClickModalAgree = () => {
     remove();
     setIsLogin(false);
-    Cookies.remove('access_token');
+    Cookies.remove("access_token");
     toggleIsModalOpened();
   };
   const { data, remove } = useProfile({
@@ -52,7 +52,7 @@ const NavigationBar = () => {
               variant="h6"
               noWrap
               onClick={handleClickLogo}
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: "pointer" }}
             >
               Wish Mart
             </Typography>

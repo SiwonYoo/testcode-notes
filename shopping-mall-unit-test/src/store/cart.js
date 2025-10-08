@@ -1,9 +1,9 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
-import { getItem, setItem } from '@/helpers/localStorage';
-import { parseJSON } from '@/utils/common';
+import { getItem, setItem } from "@/helpers/localStorage";
+import { parseJSON } from "@/utils/common";
 
-const CART_LOCAL_STORAGE_KEY = 'CART_LOCAL_STORAGE_KEY';
+const CART_LOCAL_STORAGE_KEY = "CART_LOCAL_STORAGE_KEY";
 
 const getCartFromLocalStorage = userId => {
   const cartItem = parseJSON(getItem(CART_LOCAL_STORAGE_KEY));

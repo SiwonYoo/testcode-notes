@@ -1,6 +1,6 @@
-import React from 'react';
-import { Navigation } from 'swiper';
-import { Swiper, SwiperSlide } from 'swiper/react';
+import React from "react";
+import { Navigation } from "swiper";
+import { Swiper, SwiperSlide } from "swiper/react";
 
 const ProductImagesSwiper = ({ images }) => {
   return (
@@ -10,8 +10,8 @@ const ProductImagesSwiper = ({ images }) => {
       navigation={{ clickable: true }}
     >
       {images.map(imageSrc => (
-        <SwiperSlide key={imageSrc} style={{ textAlign: 'center' }}>
-          <img src={imageSrc} style={{ height: '50ch' }} />
+        <SwiperSlide key={imageSrc} style={{ textAlign: "center" }}>
+          <img src={imageSrc} style={{ height: "50ch" }} />
         </SwiperSlide>
       ))}
     </Swiper>

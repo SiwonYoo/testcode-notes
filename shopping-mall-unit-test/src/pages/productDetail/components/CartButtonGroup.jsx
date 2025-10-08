@@ -1,10 +1,10 @@
-import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
-import { Button, InputAdornment, TextField, Box } from '@mui/material';
-import React, { useState } from 'react';
-import { toast } from 'react-hot-toast';
+import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
+import { Button, InputAdornment, TextField, Box } from "@mui/material";
+import React, { useState } from "react";
+import { toast } from "react-hot-toast";
 
-import { MAX_CART_VALUE, TOAST_ID } from '@/constants';
-import { cartValidationMessages } from '@/messages';
+import { MAX_CART_VALUE, TOAST_ID } from "@/constants";
+import { cartValidationMessages } from "@/messages";
 
 const CartButtonGroup = ({ onClickAddCart, onChangeCount }) => {
   const [count, setCount] = useState(0);
@@ -23,9 +23,9 @@ const CartButtonGroup = ({ onClickAddCart, onChangeCount }) => {
   return (
     <Box
       sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
       }}
     >
       <TextField
@@ -33,15 +33,15 @@ const CartButtonGroup = ({ onClickAddCart, onChangeCount }) => {
         onChange={handleChangeCount}
         value={count}
         size="small"
-        sx={{ width: '15ch' }}
+        sx={{ width: "15ch" }}
         InputProps={{
           endAdornment: <InputAdornment position="end">개</InputAdornment>,
         }}
       />
       <Button
         sx={{
-          width: '75%',
-          marginLeft: '20px',
+          width: "75%",
+          marginLeft: "20px",
         }}
         variant="outlined"
         startIcon={<AddShoppingCartIcon />}

@@ -1,9 +1,9 @@
-import { rest } from 'msw';
+import { rest } from "msw";
 
-import response from '@/__mocks__/response';
-import { apiRoutes } from '@/apiRoutes';
+import response from "@/__mocks__/response";
+import { apiRoutes } from "@/apiRoutes";
 
-const API_DOMAIN = 'http://localhost:3000';
+const API_DOMAIN = "http://localhost:3000";
 
 export const handlers = [
   ...[
@@ -19,8 +19,8 @@ export const handlers = [
   ),
   rest.get(`${API_DOMAIN}${apiRoutes.products}`, (req, res, ctx) => {
     const data = response[apiRoutes.products];
-    const offset = Number(req.url.searchParams.get('offset'));
-    const limit = Number(req.url.searchParams.get('limit'));
+    const offset = Number(req.url.searchParams.get("offset"));
+    const limit = Number(req.url.searchParams.get("limit"));
     const products = data.products.filter(
       (_, index) => index >= offset && index < offset + limit,
     );
@@ -31,21 +31,21 @@ export const handlers = [
     );
   }),
   rest.post(`${API_DOMAIN}${apiRoutes.users}`, (req, res, ctx) => {
-    if (req.body.name === 'FAIL') {
+    if (req.body.name === "FAIL") {
       return res(ctx.status(500));
     }
 
     return res(ctx.status(200));
   }),
   rest.post(`${API_DOMAIN}${apiRoutes.login}`, (req, res, ctx) => {
-    if (req.body.email === 'FAIL@gmail.com') {
+    if (req.body.email === "FAIL@gmail.com") {
       return res(ctx.status(401));
     }
 
     return res(
       ctx.status(200),
       ctx.json({
-        access_token: 'access_token',
+        access_token: "access_token",
       }),
     );
   }),

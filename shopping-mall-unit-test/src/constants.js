@@ -4,15 +4,15 @@ export const PHONE_PATTERN = /^[0-9]{3}[-]+[0-9]{4}[-]+[0-9]{4}$/i;
 
 export const MAX_CART_VALUE = 999;
 
-export const ALL_CATEGORY_ID = '-1';
+export const ALL_CATEGORY_ID = "-1";
 
 export const NO_COUPON_ID = -1;
 
 export const couponType = {
-  PERCENT: 'percent',
-  PRICE: 'price',
+  PERCENT: "percent",
+  PRICE: "price",
 };
 
 // for prevent duplicate
 // https://react-hot-toast.com/docs/toast
-export const TOAST_ID = 'TOAST_ID';
+export const TOAST_ID = "TOAST_ID";

@@ -1,15 +1,15 @@
-import { Box, Skeleton } from '@mui/material';
-import React, { Suspense } from 'react';
+import { Box, Skeleton } from "@mui/material";
+import React, { Suspense } from "react";
 
-import ApiErrorBoundary from '@/pages/common/components/ApiErrorBoundary';
-import CategoryRadioGroup from '@/pages/home/components/CategoryRadioGroup';
-import PriceRange from '@/pages/home/components/PriceRange';
-import SearchBar from '@/pages/home/components/SearchBar';
-import { useFilterStore } from '@/store/filter';
-import { debounce, pick } from '@/utils/common';
+import ApiErrorBoundary from "@/pages/common/components/ApiErrorBoundary";
+import CategoryRadioGroup from "@/pages/home/components/CategoryRadioGroup";
+import PriceRange from "@/pages/home/components/PriceRange";
+import SearchBar from "@/pages/home/components/SearchBar";
+import { useFilterStore } from "@/store/filter";
+import { debounce, pick } from "@/utils/common";
 
 const ProductFilterBox = ({ children }) => (
-  <Box sx={{ padding: '10px 0' }}>{children}</Box>
+  <Box sx={{ padding: "10px 0" }}>{children}</Box>
 );
 
 const ProductFilter = () => {
@@ -17,11 +17,11 @@ const ProductFilter = () => {
     useFilterStore(state =>
       pick(
         state,
-        'categoryId',
-        'setMinPrice',
-        'setMaxPrice',
-        'setTitle',
-        'setCategoryId',
+        "categoryId",
+        "setMinPrice",
+        "setMaxPrice",
+        "setTitle",
+        "setCategoryId",
       ),
     );
   const handleChangeInput = debounce(ev => {
@@ -38,7 +38,7 @@ const ProductFilter = () => {
   };
 
   return (
-    <Box sx={{ padding: '10px' }}>
+    <Box sx={{ padding: "10px" }}>
       <ProductFilterBox>
         <SearchBar onChangeInput={handleChangeInput} />
       </ProductFilterBox>

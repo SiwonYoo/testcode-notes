@@ -1,16 +1,16 @@
-import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteIcon from "@mui/icons-material/Delete";
 import {
   TableCell,
   TableRow,
   TextField,
   InputAdornment,
   IconButton,
-} from '@mui/material';
-import React from 'react';
+} from "@mui/material";
+import React from "react";
 
-import { MAX_CART_VALUE } from '@/constants';
-import { cartValidationMessages } from '@/messages';
-import { formatPrice } from '@/utils/formatter';
+import { MAX_CART_VALUE } from "@/constants";
+import { cartValidationMessages } from "@/messages";
+import { formatPrice } from "@/utils/formatter";
 
 const ProductInfoTableRow = ({
   item,
@@ -37,7 +37,7 @@ const ProductInfoTableRow = ({
 
   return (
     <TableRow>
-      <TableCell sx={{ textAlign: 'center' }}>
+      <TableCell sx={{ textAlign: "center" }}>
         <img src={images[0]} height="80px" />
       </TableCell>
       <TableCell>{title}</TableCell>
@@ -47,7 +47,7 @@ const ProductInfoTableRow = ({
           onChange={handleChangeCount(id)}
           defaultValue={count}
           size="small"
-          sx={{ width: '10ch' }}
+          sx={{ width: "10ch" }}
           InputProps={{
             endAdornment: <InputAdornment position="end">개</InputAdornment>,
           }}

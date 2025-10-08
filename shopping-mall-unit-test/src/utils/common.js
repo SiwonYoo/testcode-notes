@@ -28,7 +28,7 @@ export const debounce = (fn, wait) => {
   };
 };
 
-export const isNumber = value => typeof value === 'number';
+export const isNumber = value => typeof value === "number";
 
 export const parseJSON = value => {
   if (!value) {
@@ -37,5 +37,5 @@ export const parseJSON = value => {
 
   const result = JSON.parse(value);
 
-  return typeof result === 'string' ? JSON.parse(result) : result;
+  return typeof result === "string" ? JSON.parse(result) : result;
 };

@@ -8,14 +8,14 @@ import {
   CircularProgress,
   TableCell,
   TableRow,
-} from '@mui/material';
-import React, { Suspense } from 'react';
+} from "@mui/material";
+import React, { Suspense } from "react";
 
-import AddressTableRow from '@/pages/purchase/components/AddressTableRow';
-import CouponListTableRow from '@/pages/purchase/components/CouponListTableRow';
-import NameTableRow from '@/pages/purchase/components/NameTableRow';
-import PhoneTableRow from '@/pages/purchase/components/PhoneTableRow';
-import RequestsTableRow from '@/pages/purchase/components/RequestsTableRow';
+import AddressTableRow from "@/pages/purchase/components/AddressTableRow";
+import CouponListTableRow from "@/pages/purchase/components/CouponListTableRow";
+import NameTableRow from "@/pages/purchase/components/NameTableRow";
+import PhoneTableRow from "@/pages/purchase/components/PhoneTableRow";
+import RequestsTableRow from "@/pages/purchase/components/RequestsTableRow";
 
 const ShippingInformationForm = () => (
   <Box>
@@ -28,7 +28,7 @@ const ShippingInformationForm = () => (
           <Suspense
             fallback={
               <TableRow>
-                <TableCell style={{ fontWeight: 'bold', width: '30%' }}>
+                <TableCell style={{ fontWeight: "bold", width: "30%" }}>
                   할인쿠폰
                 </TableCell>
                 <TableCell>

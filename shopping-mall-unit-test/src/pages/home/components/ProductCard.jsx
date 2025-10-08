@@ -7,13 +7,13 @@ import {
   Typography,
   Chip,
   Grid,
-} from '@mui/material';
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+} from "@mui/material";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 
-import { pageRoutes } from '@/apiRoutes';
-import { pathToUrl } from '@/helpers/url';
-import { formatPrice } from '@/utils/formatter';
+import { pageRoutes } from "@/apiRoutes";
+import { pathToUrl } from "@/helpers/url";
+import { formatPrice } from "@/utils/formatter";
 
 const ProductCard = ({
   product,
@@ -40,7 +40,7 @@ const ProductCard = ({
 
   return (
     <Grid item xs={6} sm={6} md={3} onClick={handleClickItem}>
-      <Card sx={{ maxWidth: 345, cursor: 'pointer' }}>
+      <Card sx={{ maxWidth: 345, cursor: "pointer" }}>
         <CardMedia component="img" height="140" image={images?.[0]} />
         <CardContent>
           <Chip
@@ -48,19 +48,19 @@ const ProductCard = ({
             size="small"
             color="success"
             variant="outlined"
-            style={{ borderRadius: '10px' }}
+            style={{ borderRadius: "10px" }}
           />
           <Typography
             gutterBottom
             component="h4"
             sx={{
               height: 50,
-              fontWeight: 'bold',
-              textOverflow: 'ellipsis',
-              display: '-webkit-box',
-              WebkitLineClamp: '2',
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
+              fontWeight: "bold",
+              textOverflow: "ellipsis",
+              display: "-webkit-box",
+              WebkitLineClamp: "2",
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
             }}
           >
             {title}

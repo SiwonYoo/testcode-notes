@@ -3,15 +3,15 @@ import {
   useInfiniteQuery,
   useMutation,
   useQueryClient,
-} from '@tanstack/react-query';
-import { toast } from 'react-hot-toast';
+} from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
 
-import { TOAST_ID } from '@/constants';
+import { TOAST_ID } from "@/constants";
 import {
   defaultDeleteFunc,
   defaultFetcher,
   defaultPostFunc,
-} from '@/helpers/fetcher';
+} from "@/helpers/fetcher";
 
 // https://github.com/horprogs/react-query/blob/master/src/utils/reactQuery.ts
 
@@ -23,7 +23,7 @@ export const useFetch = ({ url, options }) => {
       enabled: !!url,
       useErrorBoundary: true,
       onError: error => {
-        console.error(error, 'error');
+        console.error(error, "error");
         return toast.error(`Something went wrong: ${error.message}`, {
           id: TOAST_ID,
         });

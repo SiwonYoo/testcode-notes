@@ -1,4 +1,4 @@
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   Box,
   Typography,
@@ -12,10 +12,10 @@ import {
   TableHead,
   TableRow,
   Paper,
-} from '@mui/material';
-import React from 'react';
+} from "@mui/material";
+import React from "react";
 
-import useUsers from '@/pages/login/hooks/useUsers';
+import useUsers from "@/pages/login/hooks/useUsers";
 
 const getUniqUserByName = users => {
   const map = new Map();
@@ -34,10 +34,10 @@ const AvailableUsers = () => {
   return (
     <Box
       sx={{
-        marginTop: '50px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
+        marginTop: "50px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
       }}
     >
       <Accordion>

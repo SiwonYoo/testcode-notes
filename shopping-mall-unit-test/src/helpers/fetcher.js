@@ -1,4 +1,4 @@
-import { api } from '@/helpers/axios';
+import { api } from "@/helpers/axios";
 
 export const defaultFetcher = ({ queryKey, pageParam }) => {
   const [url, params] = queryKey;
