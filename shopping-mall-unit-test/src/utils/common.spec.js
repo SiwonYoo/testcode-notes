@@ -35,3 +35,54 @@ describe("pick util 단위테스트", () => {
     expect(pick(obj)).toEqual({});
   });
 });
+
+describe("debounce", () => {
+  // 타이머 모킹 -> 0.3초 흐른 것으로 타이머 조작 -> spy 함수 호출 확인
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  // teardown에서 모킹 초기화 -> 다른 테스트에 영향이 없어야 함
+  // 타이머 모킹도 초기화 필수
+  // 3rd 파티 라이브러리, 전역의 teardown에서 타이머에 의존하는 로직 -> fakeTimer로 인해 제대로 동작하지 않을 수 있음
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("특정 시간이 지난 후 함수가 호출된다.", () => {
+    const spy = vi.fn();
+    const debouncedFn = debounce(spy, 300);
+
+    debouncedFn();
+    vi.advanceTimersByTime(300);
+
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it("연이어 호출해도 마지막 호출 기준으로 지정된 타이머 시간이 지난 경우에만 함수가 호출된다.", () => {
+    const spy = vi.fn();
+    const debouncedFn = debounce(spy, 300);
+
+    debouncedFn();
+
+    // 최초 호출 후 0.2초 후 호출
+    vi.advanceTimersByTime(200);
+    debouncedFn();
+
+    // 두 번째 호출 후 0.1초 후 호출
+    vi.advanceTimersByTime(100);
+    debouncedFn();
+
+    // 세 번째 호출 후 0.2초 후 호출
+    vi.advanceTimersByTime(200);
+    debouncedFn();
+
+    // 네 번째 호출 후 0.3초 후 호출
+    // 최초 호출 후에 함수 호출 간격이 0.3초 이상 -> 다섯 번째 호출이 유일
+    vi.advanceTimersByTime(300);
+    debouncedFn();
+
+    // 다섯 번을 호출했지만 실제 spy 함수는 단 한 번만 호출
+    expect(spy).toBeCalledTimes(1);
+  });
+});
