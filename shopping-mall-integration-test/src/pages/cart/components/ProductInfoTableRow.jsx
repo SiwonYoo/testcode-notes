@@ -12,6 +12,7 @@ import { MAX_CART_VALUE } from '@/constants';
 import { cartValidationMessages } from '@/messages';
 import { formatPrice } from '@/utils/formatter';
 
+// 상품명, 가격과 같은 정보와 삭제, 수량 변경 필드 렌더링
 const ProductInfoTableRow = ({
   item,
   user,
