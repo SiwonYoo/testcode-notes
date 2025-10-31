@@ -44,9 +44,11 @@ const calculateTotal = cart =>
 // 장바구니 상품 정보는 로그인한 사용자와 매핑된다.
 // 앱 전반적으로 필요한 데이터이기 때문에 zustand를 사용한 상태 관리가 필요하다.
 export const useCartStore = create(set => ({
-  cart: {},
-  totalCount: 0,
-  totalPrice: 0,
+  cart: {}, // 장바구니 상품 목록
+  totalCount: 0, // 총 상품 개수
+  totalPrice: 0, // 총 가격
+
+  // 유저 ID 기준으로 기존 장바구니 불러오기
   initCart: userId =>
     set(state => {
       if (!userId) {
@@ -61,6 +63,8 @@ export const useCartStore = create(set => ({
         cart: prevCartItem,
       };
     }),
+
+  // 장바구니 상태 초기화
   resetCart: userId =>
     set(() => {
       resetCartAtLocalStorage(userId);
@@ -71,6 +75,8 @@ export const useCartStore = create(set => ({
         cart: {},
       };
     }),
+
+  // 상품 추가
   addCartItem: (item, userId, count) =>
     set(state => {
       const cart = {
@@ -86,6 +92,8 @@ export const useCartStore = create(set => ({
 
       return { ...total, cart };
     }),
+
+  // 상품 삭제
   removeCartItem: (itemId, userId) =>
     set(state => {
       const cart = { ...state.cart };
@@ -96,6 +104,8 @@ export const useCartStore = create(set => ({
 
       return { ...total, cart };
     }),
+
+  // 상품 수량 변경
   changeCartItemCount: ({ itemId, count, userId }) =>
     set(state => {
       const cart = {
