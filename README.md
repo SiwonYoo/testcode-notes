@@ -5,6 +5,7 @@
 [섹션 1. 프론트엔드 테스트 작성 준비하기](./unit-test-example/README.md#섹션-1-프론트엔드-테스트-작성-준비하기)  
 [섹션 2. 단위 테스트란](./unit-test-example/README.md#섹션-2-단위-테스트란)  
 [섹션 3. 단위 테스트 작성하기](./shopping-mall-unit-test/README.md#섹션-3-단위-테스트-작성하기)
+[섹션 4. 통합 테스트란?](./shopping-mall-integration-test/README.md#섹션-4-통합-테스트란)
 
 ## 강의
 
