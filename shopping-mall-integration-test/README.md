@@ -1,4 +1,5 @@
-> [섹션 4. 통합 테스트란?](#섹션-4-통합-테스트란)
+> [섹션 4. 통합 테스트란?](#섹션-4-통합-테스트란)  
+> [섹션 5. 통합 테스트 작성하기](#섹션-5-통합-테스트-작성하기)
 
 # 섹션 4. 통합 테스트란?
 
@@ -1240,3 +1241,1049 @@ it('상품 클릭시 "/product/:productId" 경로로 navigate 함수가 호출�
 - **useInfiniteQuery**: 무한 스크롤 or “더보기” 형태 API 페이징 처리
 - **Zustand mock**: store 상태를 테스트용으로 제어 (`mockUseUserStore`, `mockUseCartStore`)
 - **통합 테스트 목적**: API 응답-렌더링-이벤트 핸들링까지 전체 UI 흐름을 검증
+
+&nbsp;
+
+# 섹션 5. 통합 테스트 작성하기
+
+## 5.1 통합 테스트 작성하기 - ProductFilter
+
+### ProductFilter 컴포넌트 기능
+
+- **SearchBar**: 상품명 텍스트 입력
+- **CategoryRadioGroup**: 라디오 형태 카테고리 선택
+- **PriceRange**: 최소/최대 가격 범위 설정
+- **Store 연동**
+  - `useFilterStore`에서 `setMinPrice`, `setMaxPrice`, `setTitle`, `setCategoryId` 액션을 가져온다.
+  - `categoryId` state: 선택된 카테고리 관리
+- **비즈니스 로직**
+  - API를 통해 카테고리 목록을 가져와 라디오 버튼을 렌더링한다.
+  - 상품명 입력 → `setTitle` 호출
+  - 카테고리 클릭 → 선택된 라디오 체크
+  - 최소/최대 가격 입력 → `setMinPrice`/`setMaxPrice` 호출
+
+```jsx
+const ProductFilter = () => {
+  const { categoryId, setCategoryId, setMaxPrice, setMinPrice, setTitle } =
+    useFilterStore(state =>
+      pick(
+        state,
+        'categoryId',
+        'setMinPrice',
+        'setMaxPrice',
+        'setTitle',
+        'setCategoryId',
+      ),
+    );
+
+  const handleChangeInput = ev => {
+    setTitle(ev.target.value);
+  };
+  const handleMinPrice = ev => {
+    setMinPrice(ev.target.value);
+  };
+  const handleMaxPrice = ev => {
+    setMaxPrice(ev.target.value);
+  };
+  const handleChangeCategory = ev => {
+    setCategoryId(ev.target.value);
+  };
+
+  return (
+    <Box sx={{ padding: '10px' }}>
+      <ProductFilterBox>
+        <SearchBar onChangeInput={handleChangeInput} />
+      </ProductFilterBox>
+      <ProductFilterBox>
+        <ApiErrorBoundary>
+          <Suspense fallback={<Skeleton height="100px" />}>
+            <CategoryRadioGroup
+              categoryId={categoryId}
+              onChangeCategory={handleChangeCategory}
+            />
+          </Suspense>
+        </ApiErrorBoundary>
+      </ProductFilterBox>
+      <ProductFilterBox>
+        <PriceRange
+          onChangeMinPrice={handleMinPrice}
+          onChangeMaxPrice={handleMaxPrice}
+        />
+      </ProductFilterBox>
+    </Box>
+  );
+};
+```
+
+### CategoryRadioGroup 컴포넌트
+
+- `useCategories` 훅 사용 → 내부적으로 React Query로 카테고리 API 호출
+- API 응답 데이터를 받아 라디오 버튼을 렌더링한다.
+- 비동기 프로미스 기반의 데이터 처리가 필요하다.
+
+```jsx
+const CategoryRadioGroup = ({ categoryId, onChangeCategory }) => {
+  const { data } = useCategories();
+
+  return (
+    <FormControl>
+      <FormLabel>카테고리</FormLabel>
+      <RadioGroup
+        row
+        name="category"
+        onChange={onChangeCategory}
+        value={categoryId}
+      >
+        <FormControlLabel
+          value={ALL_CATEGORY_ID}
+          control={<Radio />}
+          id="All"
+          label="All"
+        />
+        {data?.map(({ id, name }) => (
+          <FormControlLabel
+            key={id}
+            value={id}
+            id={id}
+            control={<Radio />}
+            label={name}
+          />
+        ))}
+      </RadioGroup>
+    </FormControl>
+  );
+};
+```
+
+### 테스트를 위한 사전 작업: 스토어 & API 모킹
+
+**API 모킹: 카테고리 조회**
+
+- MSW 사용 → useCategories 훅에서 호출되는 /categories GET API를 모킹한다.
+- 응답: categories.json 기준
+- 비동기 Promise 기반이므로 테스트에서 `findBy` 쿼리가 필요하다.
+
+```json
+[
+  {
+    "id": 1,
+    "image": "https://api.lorem.space/image/fashion",
+    "name": "category1",
+		...
+  },
+  {
+    "id": 2,
+    "image": "https://api.lorem.space/image/fashion",
+    "name": "category2",
+    ...
+  },
+  {
+    "id": 3,
+    "image": "https://api.lorem.space/image/fashion",
+    "name": "category3",
+    ...
+  }
+]
+
+```
+
+```jsx
+rest.get(`${API_DOMAIN}${apiRoutes.categories}`, (_, res, ctx) =>
+  res(ctx.status(200), ctx.json(response[apiRoutes.categories])),
+);
+```
+
+**store 모킹: 액션 spy**
+
+- 필터 스토어에서 액션 호출 여부를 검증한다.
+- `setCategoryId`는 실제 라디오 UI 상태 반영으로 테스트가 가능하므로 모킹하지 않는다.
+- `setMinPrice`, `setMaxPrice`, `setTitle`은 spy 함수로 모킹한다.
+
+```jsx
+const setMinPriceFn = vi.fn();
+const setMaxPriceFn = vi.fn();
+const setTitleFn = vi.fn();
+
+beforeEach(() => {
+  mockUseFilterStore({
+    setMinPrice: setMinPriceFn,
+    setMaxPrice: setMaxPriceFn,
+    setTitle: setTitleFn,
+  });
+});
+```
+
+### 테스트 1: 카테고리 목록 렌더링
+
+```jsx
+it('카테고리 목록을 가져온 후 카테고리 필드의 정보들이 올바르게 렌더링된다.', async () => {
+  await render(<ProductFilter />);
+
+  // API 호출 결과에 따라 라디오 버튼이 렌더링되는지 확인
+  expect(await screen.findByLabelText('category1')).toBeInTheDocument();
+  expect(await screen.findByLabelText('category2')).toBeInTheDocument();
+  expect(await screen.findByLabelText('category3')).toBeInTheDocument();
+});
+```
+
+### 테스트 2: 상품명 입력 시 setTitle 호출
+
+```jsx
+it('상품명을 수정하는 경우 setTitle 액션이 호출된다.', async () => {
+  const { user } = await render(<ProductFilter />);
+
+  const textInput = screen.getByLabelText('상품명');
+  await user.type(textInput, 'test');
+
+  expect(setTitleFn).toHaveBeenCalledWith('test');
+});
+```
+
+### 테스트 3: 카테고리 클릭 시 선택 확인
+
+```jsx
+it('카테고리를 클릭 할 경우의 클릭한 카테고리가 체크된다.', async () => {
+  // 라디오 클릭 -> setCategoryId -> categoryId state 변경 -> 선택된 라디오 값 변경
+  const { user } = await render(<ProductFilter />);
+
+  // 카테고리의 경우, API에서 데이터를 가져오므로 findBy 쿼리를 사용하여 응답 결과를 기다려야 한다.
+  const category3 = await screen.findByLabelText('category3');
+  await user.click(category3);
+
+  expect(category3).toBeChecked(); // 클릭 후 선택 상태 반영 확인
+});
+```
+
+### 테스트 4: 최소/최대 가격 입력 시 액션 호출
+
+```jsx
+it('최소 가격 또는 최대 가격을 수정하면 setMinPrice과 setMaxPrice 액션이 호출된다.', async () => {
+  const { user } = await render(<ProductFilter />);
+
+  const minPriceTextInput = screen.getByPlaceholderText('최소 금액');
+  await user.type(minPriceTextInput, '1');
+  expect(setMinPriceFn).toHaveBeenCalledWith('1');
+
+  const maxPriceTextInput = screen.getByPlaceholderText('최대 금액');
+  await user.type(maxPriceTextInput, '2');
+  expect(setMaxPriceFn).toHaveBeenCalledWith('2');
+});
+```
+
+### 정리
+
+**ProductFilter 통합 테스트 구성**
+
+- 컴포넌트 초기 필터 정보를 갱신하기 위해 **filter 스토어를 모킹**한다.
+- 카테고리 라디오 버튼 렌더링을 위해 **API 호출을 MSW로 모킹**한다.
+- Setup 과정에서 **스토어 액션 spy 함수**를 등록한다. (`beforeEach`)
+- **요소 조회 방법**
+  - `getByLabelText`, `getByPlaceholderText` → DOM 요소를 즉시 조회
+  - `findBy~` → 비동기 API 호출 결과를 기다린 후 조회
+- **검증**: 액션 호출 여부 및 UI 상태 변화를 확인한다.
+
+---
+
+## 5.2 통합 테스트 작성하기 - NavigationBar
+
+### NavigationBar 주요 기능
+
+- 메인 홈페이지로 이동하는 `[Wish Mart]` **텍스트 로고**
+- **비로그인 시**
+  - `[로그인]` 버튼 노출 → 클릭 시 `/login` 페이지로 이동
+- **로그인 시**
+  - `[장바구니]` 아이콘 + 담긴 상품 수 표시 → 클릭 시 `/cart` 페이지로 이동
+  - 사용자 이름 버튼 노출 → 클릭 시 `confirm 모달` 열림
+    - `[확인]` 클릭 시, 로그아웃되고 모달 닫힘
+    - `[취소]` 클릭 시, 모달 닫힘
+
+### NavigationBar 핵심 코드 구조
+
+```jsx
+const NavigationBar = () => {
+  const navigate = useNavigate();
+  const { isModalOpened, toggleIsModalOpened } = useConfirmModal();
+  const { isLogin, setIsLogin, setUserData } = useUserStore(state =>
+    pick(state, 'isLogin', 'setIsLogin', 'setUserData'),
+  );
+  const { cart, initCart } = useCartStore(state =>
+    pick(state, 'cart', 'initCart'),
+  );
+
+  // 로그아웃 처리 함수
+  const handleClickModalAgree = () => {
+    remove();
+    setIsLogin(false);
+    Cookies.remove('access_token');
+    toggleIsModalOpened();
+  };
+
+  // 로그인된 경우 프로필 정보 요청
+  const { data, remove } = useProfile({
+    config: {
+      onSuccess: profile => {
+        setUserData(profile);
+        initCart(profile.id);
+      },
+      enabled: !!isLogin,
+    },
+  });
+
+  const handleClickLogo = () => navigate(pageRoutes.main);
+
+  return (
+    <>
+      <Box sx={{ flexGrow: 1 }}>
+        <AppBar position="fixed">
+          <Toolbar>
+            {/* 로고 */}
+            <Typography
+              variant="h6"
+              noWrap
+              style={{ cursor: 'pointer' }}
+              onClick={handleClickLogo}
+            >
+              Wish Mart
+            </Typography>
+            <Box sx={{ flexGrow: 1 }} />
+            <Box>
+              {/* 로그인 여부에 따른 분기 */}
+              {isLogin ? (
+                <ApiErrorBoundary>
+                  <Suspense
+                    fallback={<Skeleton sx={{ width: 100, height: 30 }} />}
+                  >
+                    <CartButton cart={cart} />
+                    <LogoutButton data={data} onClick={toggleIsModalOpened} />
+                  </Suspense>
+                </ApiErrorBoundary>
+              ) : (
+                <LoginButton />
+              )}
+            </Box>
+          </Toolbar>
+        </AppBar>
+      </Box>
+
+      {/* 로그아웃 확인 모달 */}
+      <ConfirmModal
+        title="로그아웃 확인"
+        description="로그아웃 하시겠습니까?"
+        handleClickAgree={handleClickModalAgree}
+        handleClickDisagree={toggleIsModalOpened}
+        isModalOpened={isModalOpened}
+      />
+    </>
+  );
+};
+```
+
+### 하위 컴포넌트
+
+**CartButton.jsx**
+
+```jsx
+const CartButton = ({ cart }) => {
+  const navigate = useNavigate();
+  const handleClickCart = () => {
+    navigate(pageRoutes.cart);
+  };
+
+  return (
+    <IconButton size="large" color="inherit" onClick={handleClickCart}>
+      <Badge badgeContent={Object.keys(cart).length || null} color="error">
+        <ShoppingCart data-testid="cart-icon" />
+      </Badge>
+    </IconButton>
+  );
+};
+```
+
+**LoginButton.jsx**
+
+```jsx
+const LoginButton = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleClickLogin = () => {
+    navigate(pageRoutes.login, { state: { prevPath: location.pathname } });
+  };
+
+  return (
+    <Button
+      variant="text"
+      size="large"
+      style={{ color: '#fff' }}
+      onClick={handleClickLogin}
+    >
+      로그인
+    </Button>
+  );
+};
+```
+
+**LogoutButton.jsx**
+
+```jsx
+const LogoutButton = ({ data, onClick }) => {
+  return (
+    <Button
+      variant="text"
+      size="large"
+      style={{ color: '#fff' }}
+      onClick={onClick}
+    >
+      {data?.name}
+    </Button>
+  );
+};
+```
+
+### 테스트 1: Wish Mart 텍스트 로고 클릭
+
+```jsx
+it('"Wish Mart" 텍스트 로고을 클릭할 경우 "/" 경로로 navigate가 호출된다.', async () => {
+  const { user } = await render(<NavigationBar />);
+
+  await user.click(screen.getByText('Wish Mart'));
+
+  expect(navigateFn).toHaveBeenNthCalledWith(1, '/');
+});
+```
+
+### 테스트 2: 로그인 상태 테스트
+
+**(1) MSW 모킹 설정**
+
+- 기존 handlers.js의 `/user` 응답을 로그인 상태로 변경하기 위해 `server.use()`를 사용해 테스트 내에서 동적으로 모킹한다.
+
+```jsx
+server.use(
+  rest.get('/user', (_, res, ctx) =>
+    res( ctx.status(200), ctx.json({ email: 'maria@gmail.com', id: userId, name: 'Maria', password: '12345' }) );
+  )
+);
+
+mockUseUserStore({ isLogin: true });
+
+mockUseCartStore({ cart: { 6: {...}, 7: {...} } });
+```
+
+**(2) 장바구니 & 사용자 이름 노출 테스트**
+
+```jsx
+// 장바구니 및 로그인 여부 외에 사용자 정보 필요
+it('장바구니(담긴 상품 수와 버튼)와 로그아웃 버튼(사용자 이름: "Maria")이 노출된다.', async () => {
+  await render(<NavigationBar />);
+
+  expect(screen.getByTestId('cart-icon')).toBeInTheDocument();
+  expect(screen.getByText('2')).toBeInTheDocument();
+
+  // Promise 기반으로 응답을 기다려야 하기 때문에 getByRole이 아닌, findByRole을 사용해야 API 응답을 정상적으로 기다린 후 테스트가 실행된다.
+  expect(
+    await screen.findByRole('button', { name: 'Maria' }),
+  ).toBeInTheDocument();
+});
+```
+
+**(3) 장바구니 클릭 시 페이지 이동 테스트**
+
+```jsx
+it('장바구니 버튼 클릭 시 "/cart" 경로로 navigate를 호출한다.', async () => {
+  const { user } = await render(<NavigationBar />);
+
+  const cartIcon = screen.getByTestId('cart-icon');
+  await user.click(cartIcon);
+
+  expect(navigateFn).toHaveBeenNthCalledWith(1, '/cart');
+});
+```
+
+**(4) 로그아웃 모달 관련 테스트**
+
+```jsx
+// 로그아웃 버튼을 클릭하는 경우, 로그아웃 모달과 관련되기 때문에 describe 블록으로 그룹핑
+describe('로그아웃 버튼(사용자 이름: "Maria")을 클릭하는 경우', () => {
+  // 클릭하는 부분까지 beforeEach setup로 미리 설정
+  let userEvent;
+  beforeEach(async () => {
+    const { user } = await render(<NavigationBar />);
+    userEvent = user;
+
+    const logoutBtn = await screen.findByRole('button', { name: 'Maria' });
+    await user.click(logoutBtn);
+  });
+
+  it('모달이 렌더링되며, 모달 내에 "로그아웃 하시겠습니까?" 텍스트가 렌더링된다.', () => {
+    const dialog = screen.getByRole('dialog');
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(
+      // within API: 특정 요소 내에서 RTL 쿼리를 사용하고 싶은 경우 사용
+      within(dialog).getByText('로그아웃 하시겠습니까?'),
+    ).toBeInTheDocument();
+  });
+
+  it('모달의 확인 버튼을 누르면, 로그아웃이 되며, 모달이 사라진다.', async () => {
+    const confirmBtn = screen.getByRole('button', { name: '확인' });
+
+    await userEvent.click(confirmBtn);
+
+    expect(screen.getByRole('button', { name: '로그인' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Maria' }),
+    ).not.toBeInTheDocument();
+
+    // queryBy~ API: 요소의 존재 여부를 판단할 때 사용 (요소가 존재하지 않아도 에러 없이 단언 가능)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('모달의 취소 버튼을 누르면, 모달이 사라진다.', async () => {
+    const cancelBtn = screen.getByRole('button', { name: '취소' });
+
+    await userEvent.click(cancelBtn);
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+```
+
+**(5) 테스트 후 초기화**
+
+```jsx
+afterEach(() => {
+  // 런타임에 변경한 MSW의 모킹을 초기화하는 역할
+  server.resetHandlers(); // 모킹 초기화
+  vi.clearAllMocks(); // mock 함수 초기화
+});
+```
+
+### 테스트 3: 비로그인 상태 테스트
+
+```jsx
+describe('로그인이 안된 경우', () => {
+  it('로그인 버튼이 노출되며, 클릭 시 "/login" 경로와 현재 pathname인 "pathname"과 함께 navigate를 호출한다.', async () => {
+    const { user } = await render(<NavigationBar />);
+
+    expect(screen.getByRole('button', { name: '로그인' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '로그인' }));
+
+    expect(navigateFn).toHaveBeenNthCalledWith(1, '/login', {
+      state: { prevPath: 'pathname' },
+    });
+  });
+});
+```
+
+### 정리
+
+- `server.use()`: 테스트 중 기존 MSW 응답을 동적으로 변경해야 할 때 사용한다.
+- `server.resetHandlers()`: 테스트 종료 후 응답을 초기 상태로 복원한다.
+- `findByRole()`: 비동기 응답을 기다리며 요소 탐색한다.
+- `queryByRole()`: 요소 존재 여부만 확인할 때 사용한다. (없어도 에러나지 않는다.)
+- `within()`: 특정 DOM 내에서 쿼리를 제한적으로 사용할 수 있다.
+
+**NavigationBar**
+
+- **테스트를 위한 사전 준비**
+  - 로그인, 로그아웃 여부를 판단하기 위한 user 스토어 모킹
+  - 장바구니 상품 수량을 가져오기 위한 cart 스토어 모킹
+  - 로그인한 사용자 정보를 가져오기 위한 `/user` API를 msw로 모킹
+    - 비로그인 상태로 모킹
+- **테스트 작성하기**
+  - `/user` API에 대해 상황에 따라 다른 모킹을 하기 위해 `server.use()` API를 사용한다.
+  - Teardown(`afterEach`)에서 `server.resetHandlers()` 호출로 동적인 API 모킹을 초기화한다.
+  - 일관된 모킹 데이터로 안정성있는 테스트를 작성할 수 있다.
+
+---
+
+## 5.3 통합 테스트의 한계 - 구매 페이지
+
+### 구매 페이지
+
+- 배송 정보, 상품 정보, 결제 정보가 하나의 폼으로 결합된 구조
+- react-hook-form의 `FormProvider`로 전체 폼 상태를 공유하고 있다.
+
+```jsx
+const Purchase = () => {
+  // 구매 요청 훅 (POST) - mutate 호출 시 실제 주문 API 호출
+  const { mutate, isLoading } = usePurchase();
+  const navigate = useNavigate();
+
+  // zustand cart, user store에서 필요한 액션/데이터만 선택
+  const { resetCart } = useCartStore(state => pick(state, 'resetCart'));
+  const { user } = useUserStore(state => pick(state, 'user'));
+
+  // 로깅 훅
+  const { sendErrorLog, sendInfoLog } = useLog();
+
+  // react-hook-form 설정, 기본값에 user.name을 넣어 편의성 제공
+  const methods = useForm({
+    defaultValues: {
+      name: user?.name ?? '',
+      address: '',
+      phone: '',
+      requests: '',
+      coupon: NO_COUPON_ID,
+      payment: 'accountTransfer',
+    },
+  });
+  const { handleSubmit } = methods;
+
+  // 구매 버튼 클릭 시 폼 검증 후 mutate 호출
+  const handleClickPurchase = handleSubmit(forms => {
+    mutate(forms, {
+      onSuccess: () => {
+        sendInfoLog('구매 성공');
+        resetCart(user.id); // 성공 시 장바구니 리셋
+        toast.success('구매 성공!', { id: TOAST_ID });
+        navigate(pageRoutes.main); // 메인으로 이동
+      },
+      onError: err => {
+        sendErrorLog(err);
+        toast.error('잠시 문제가 발생했습니다! 다시 시도해 주세요.', {
+          id: TOAST_ID,
+        });
+        console.error(err);
+      },
+    });
+  });
+
+  return (
+    <FormProvider {...methods}>
+      <Layout
+        containerStyle={{ paddingTop: '30px' }}
+        authStatus={authStatusType.NEED_LOGIN}
+      >
+        {/* 구매 요청 중 로딩 표시 */}
+        <Backdrop sx={{ color: '#fff', zIndex: 10000 }} open={isLoading}>
+          <CircularProgress color="inherit" />
+        </Backdrop>
+
+        {/* 도메인별 컴포넌트 구성 */}
+        <ShippingInformationForm />
+        <ItemList />
+        <Payment />
+
+        <Box
+          sx={{
+            paddingTop: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+          }}
+        >
+          <Button
+            variant="contained"
+            size="large"
+            onClick={handleClickPurchase}
+          >
+            구매하기
+          </Button>
+        </Box>
+      </Layout>
+    </FormProvider>
+  );
+};
+
+export default Purchase;
+```
+
+### 구매 페이지의 각 컴포넌트 역할
+
+- **ShippingInformationForm**
+  - 배송 정보 입력
+  - 각 필드별 유효성 검증
+  - 쿠폰 목록 API 호출 및 렌더링
+- **ItemList**
+  - 장바구니 상품 정보를 store에서 읽어 렌더링
+- **Payment**
+  - 결제 금액 계산
+  - 할인 쿠폰 적용
+  - 결제 수단 선택
+
+### ShippingInformationForm 컴포넌트
+
+- `ShippingInformationForm`은 `react-hook-form`과 연동되어 있으므로 테스트에서도 `FormProvider`로 랩핑해야 유효성 검증 동작을 확인할 수 있다.
+
+  ```jsx
+  // TestForm: ShippingInformationForm을 FormProvider로 감싸 테스트용 제출 버튼을 제공
+  const TestForm = props => {
+    const methods = useForm({
+      defaultValues: {
+        name: '',
+        address: '',
+        phone: '',
+        requests: '',
+        coupon: NO_COUPON_ID,
+        ...props,
+      },
+    });
+
+    return (
+      <FormProvider {...methods}>
+        <ShippingInformationForm />
+        {/* 테스트에서 handleSubmit을 트리거하기 위한 버튼 */}
+        <button type="button" onClick={methods.handleSubmit(() => {})}>
+          테스트 버튼
+        </button>
+      </FormProvider>
+    );
+  };
+  ```
+
+**쿠폰 데이터 렌더링 테스트**
+
+- msw로 쿠폰 API 모킹
+
+```jsx
+it('쿠폰 데이터를 가져오면 정상적으로 쿠폰 항목을 노출한다.', async () => {
+  const { user } = await render(<TestForm />);
+
+  // 셀렉트 박스 버튼을 찾아 열기
+  const [selectBoxButton] = await screen.findAllByRole('button');
+
+  await user.click(selectBoxButton);
+
+  // msw에서 모킹한 쿠폰들이 화면에 노출되는지 확인
+  expect(screen.getByText('가입 기념! $5 할인 쿠폰')).toBeInTheDocument();
+  expect(screen.getByText('$3 할인 쿠폰')).toBeInTheDocument();
+  expect(screen.getByText('10% 할인 쿠폰')).toBeInTheDocument();
+});
+```
+
+**필드별 유효성 검증 테스트**
+
+```jsx
+it('이름을 입력하지 않고 폼 전송을 시도하면 "이름을 입력하세요" 텍스트가 노출된다.', async () => {
+  const { user } = await render(<TestForm />);
+
+  const testSubmitButton = await screen.findByText('테스트 버튼');
+  await user.click(testSubmitButton);
+
+  expect(screen.getByText('이름을 입력하세요')).toBeInTheDocument();
+});
+
+it('주소를 입력하지 않고 폼 전송을 시도하면 "주소를 입력하세요" 텍스트가 노출된다.', async () => {
+  const { user } = await render(<TestForm />);
+
+  const testSubmitButton = await screen.findByText('테스트 버튼');
+  await user.click(testSubmitButton);
+
+  expect(screen.getByText('주소를 입력하세요')).toBeInTheDocument();
+});
+
+it('휴대폰 번호를 입력하지 않고 폼 전송을 시도하면 "휴대폰 번호를 입력하세요" 텍스트가 노출된다.', async () => {
+  const { user } = await render(<TestForm />);
+
+  const testSubmitButton = await screen.findByText('테스트 버튼');
+  await user.click(testSubmitButton);
+
+  expect(screen.getByText('휴대폰 번호를 입력하세요')).toBeInTheDocument();
+});
+
+it('휴대폰 번호의 패턴이 틀린 상태에서 폼 전송을 시도하면 "-를 포함한 휴대폰 번호만 가능합니다" 텍스트가 노출된다.', async () => {
+  const { user } = await render(<TestForm phone="01099999999" />);
+
+  const testSubmitButton = await screen.findByText('테스트 버튼');
+  await user.click(testSubmitButton);
+
+  expect(
+    screen.getByText('-를 포함한 휴대폰 번호만 가능합니다'),
+  ).toBeInTheDocument();
+});
+```
+
+### ItemList 컴포넌트
+
+- `ItemList`는 cart store만 모킹하면 독립적 검증이 가능하다.
+
+```jsx
+beforeEach(() => {
+  // cart store 모킹 - id 6, 7 두 상품이 담겨 있다고 가정
+  mockUseCartStore({
+    cart: {
+      6: {
+        id: 6,
+        title: 'Handmade Cotton Fish',
+        price: 100,
+        description:
+          'The slim & simple Maple Gaming Keyboard from Dev Byte comes with a sleek body and 7- Color RGB LED Back-lighting for smart functionality',
+        images: [
+          'https://user-images.githubusercontent.com/35371660/230712070-afa23da8-1bda-4cc4-9a59-50a263ee629f.png',
+        ],
+        count: 3,
+      },
+      7: {
+        id: 7,
+        title: 'Awesome Concrete Shirt',
+        price: 50,
+        description:
+          'The Nagasaki Lander is the trademarked name of several series of Nagasaki sport bikes, that started with the 1984 ABC800J',
+        images: [
+          'https://user-images.githubusercontent.com/35371660/230762100-b119d836-3c5b-4980-9846-b7d32ea4a08f.png',
+        ],
+        count: 4,
+      },
+    },
+    totalCount: 7,
+    totalPrice: 500,
+  });
+});
+
+it('구매 상품들의 이름, 수량, 금액이 순서대로 노출된다.', async () => {
+  await render(<ItemList />);
+
+  const rows = screen.getAllByRole('row');
+  const first = within(rows[0]);
+  const second = within(rows[1]);
+
+  expect(first.getByText('Handmade Cotton Fish')).toBeInTheDocument();
+  expect(first.getByText('3개')).toBeInTheDocument();
+  expect(first.getByText('$300.00')).toBeInTheDocument();
+
+  expect(second.getByText('Awesome Concrete Shirt')).toBeInTheDocument();
+  expect(second.getByText('4개')).toBeInTheDocument();
+  expect(second.getByText('$200.00')).toBeInTheDocument();
+});
+```
+
+### Payment 컴포넌트
+
+- `Payment` 컴포넌트는 cart store, 쿠폰 API, react-hook-form이 연계되어 결제 금액을 계산한다.
+- `TestPayment`는 `FormProvider`로 래핑하여 쿠폰의 기본값을 설정한다.
+
+```jsx
+beforeEach(() => {
+  mockUseCartStore({
+    cart: {
+      6: {
+        id: 6,
+        title: 'Handmade Cotton Fish',
+        price: 100,
+        description:
+          'The slim & simple Maple Gaming Keyboard from Dev Byte comes with a sleek body and 7- Color RGB LED Back-lighting for smart functionality',
+        images: [
+          'https://user-images.githubusercontent.com/35371660/230712070-afa23da8-1bda-4cc4-9a59-50a263ee629f.png',
+        ],
+        count: 3,
+      },
+      7: {
+        id: 7,
+        title: 'Awesome Concrete Shirt',
+        price: 50,
+        description:
+          'The Nagasaki Lander is the trademarked name of several series of Nagasaki sport bikes, that started with the 1984 ABC800J',
+        images: [
+          'https://user-images.githubusercontent.com/35371660/230762100-b119d836-3c5b-4980-9846-b7d32ea4a08f.png',
+        ],
+        count: 4,
+      },
+    },
+    totalCount: 7,
+    totalPrice: 500,
+  });
+});
+
+// TestPayment: Payment 컴포넌트를 FormProvider로 랩핑하여 coupon 기본값 지정
+const TestPayment = (props = {}) => {
+  const methods = useForm({
+    defaultValues: {
+      name: 'leejaesung',
+      address: '',
+      phone: '',
+      requests: '',
+      coupon: NO_COUPON_ID,
+      ...props,
+    },
+  });
+
+  return (
+    <FormProvider {...methods}>
+      <Payment />
+    </FormProvider>
+  );
+};
+
+it('총 상품 금액은 "$500.00"로 노출된다', async () => {
+  await render(<TestPayment />);
+
+  expect(screen.getByText('$500.00')).toBeInTheDocument();
+});
+
+it('배송비는 "$5.00"로 노출된다', async () => {
+  await render(<TestPayment />);
+
+  expect(screen.getByText('$5.00')).toBeInTheDocument();
+});
+
+it('할인 쿠폰을 선택하지 않은 경우 "선택 안함"으로 노출되며, 총 결제 금액은 "$505.00"로 노출된다', async () => {
+  await render(<TestPayment />);
+
+  expect(screen.getByText('선택 안함')).toBeInTheDocument();
+  expect(await screen.findByText('$505.00')).toBeInTheDocument();
+});
+
+it('price 타입의 쿠폰인 경우, 총 결제 금액은 "$502.00"로 노출된다', async () => {
+  await render(<TestPayment coupon={2} />);
+
+  expect(await screen.findByText('$3 할인 쿠폰')).toBeInTheDocument();
+  expect(await screen.findByText('$502.00')).toBeInTheDocument();
+});
+
+it('percent 타입의 쿠폰인 경우, 총 결제 금액은 "$455.00"로 노출된다', async () => {
+  await render(<TestPayment coupon={3} />);
+
+  expect(await screen.findByText('10% 할인 쿠폰')).toBeInTheDocument();
+  expect(await screen.findByText('$455.00')).toBeInTheDocument();
+});
+```
+
+### 구매 페이지 통합 테스트의 한계
+
+- **모킹 의존도 문제**
+  - 통합 테스트로 페이지 전체 워크플로우를 다루려면 cart, user, 쿠폰 GET, 구매 POST 등 많은 부분을 모킹해야 한다.
+  - 구매 성공/실패 등 핵심 프로세스도 모킹으로만 검증하게 된다.
+- **신뢰도 하락**
+  - 테스트가 복잡한 모킹 시나리오에 의존하면, 빠진 시나리오나 잘못된 모킹으로 인한 오검증 가능성이 높다.
+- **유지보수 비용 증가**
+  - 모킹이 많아질수록 테스트 유지보수 비용이 증가한다.
+
+통합 테스트는 비즈니스 로직을 나누어 컴포넌트의 상호작용을 검증하기 좋다. 그러나 전체 워크 플로우를 검증하기에는 한계가 있다. 이 명확한 한계는 **E2E 테스트**로 해결할 수 있다.
+
+### E2E 테스트
+
+- 실제 앱을 구동하여, 모킹 없이 **실제 데이터와 API를 사용해 전체 사용자 흐름을 검증**하는 테스트
+- 개발 단계에서는 **단위 테스트와 모킹 기반 통합 테스트로 핵심 비즈니스 로직을 먼저 안정화**하고, 앱이 어느정도 완성되면 **E2E 테스트로 전체 워크플로우를 실제 상황에 가깝게 검증**하여 통합 테스트가 가지는 한계를 보완한다.
+- 앱의 규모에 따라 통합 테스트나 E2E 테스트 중 일부를 생략할 수도 있으나, **일정 규모 이상의 서비스라면 대부분 두 유형의 테스트가 모두 필요하다.**
+
+### 정리
+
+- 배송(ShippingInformationForm), 상품 정보(ItemList), 결제 정보(Payment) 등 **도메인 단위의 비즈니스 로직은 통합 테스트로 안정적으로 검증**하고 있다.
+  - 하지만 이 방식만으로는 **페이지 전체에서 가장 중요한 ‘구매 프로세스’를 검증할 수 없다.**
+- **통합 테스트의 한계**
+  - 구매 기능처럼 **페이지 단위의 전체 흐름을 검증할 때는 모킹 의존도가 지나치게 높아진다.**
+  - 모킹이 많아질수록 **시나리오 누락, 잘못된 모킹으로 인한 오탐/미탐** 가능성이 커져 신뢰도가 떨어진다.
+  - 모킹해야 할 요소가 늘어나 **유지 보수 비용 또한 증가한다.**
+- **E2E 테스트는 앱을 실제로 구동시키기 때문에,** 모킹 없이 실제 데이터와 API를 기반으로 전체 워크 플로우를 검증할 수 있다.
+- 개발 단계에서는 **단위 테스트와 통합 테스트로 도메인별 핵심 로직을 검증**하고, 앱이 어느 정도 완성되면 **E2E 테스트를 통해 전체 사용자 흐름을 보완적으로 검증하는 것이 가장 효율적이다.**
+
+---
+
+## 5.4 GitHub Actions를 통한 테스트 자동화
+
+### GitHub Actions
+
+- **지속적 통합/배포(CI/CD) 플랫폼**으로, 빌드, 테스트, 배포 파이프라인을 자동화할 수 있다.
+- 자동화된 테스트를 기반으로 **코드 변경으로 인한 사이드 이펙트**를 검증할 수 있다.
+- 브랜치별 실행 기록이 남아 **문제가 발생한 시점과 원인**을 쉽게 추적할 수 있다.
+
+### 예시: Vitest 테스트 워크플로우
+
+```yaml
+name: 'vitest test' # 워크플로우 이름
+on: pull_request # 워크플로우 실행 이벤트
+jobs: # 워크플로우에서 실행할 작업
+  Component-test:
+    runs-on: ubuntu-latest
+    steps:
+	    # 노드 환경 구축
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 19
+      - name: Install dependencies
+        run: npm ci # 의존성 설치
+      - name: run vitest
+        run: npm run test # 테스트 실행
+```
+
+- **워크플로우 이름**: vitest test
+- **Job 이름**: Component-test
+- PR에서 코드를 merge하기 전 **자동으로 테스트 실행** → 테스트 실패 시 결과 확인 가능
+- Details에서 실패한 테스트의 상세 내용 확인 가능
+
+### 정리
+
+- GitHub Actions는 **레포지토리 기반 CI/CD 자동화 도구**이다.
+- `.github/workflows`에 **YAML 파일**로 워크플로우를 정의해 빌드, 테스트, 배포를 자동화할 수 있다.
+- PR 또는 원하는 시점에 테스트 액션을 실행하여 **빠른 피드백**을 받을 수 있다.
+- **코드 변경으로 인한 문제를 사전에 방지**하고, 프로젝트 안정성을 높일 수 있다.
+
+---
+
+## 5.5 1부를 마무리하며
+
+### 테스트란
+
+앱의 품질과 안정성을 높이기 위해 사전에 결함을 발견하고 수정하는 일련의 활동이다.
+
+### 테스트 코드의 효과
+
+- **리팩토링**: 광범위한 리팩토링도 안정적으로 진행할 수 있다.
+- **문서 역할**: 테스트 코드는 앱의 동작을 이해하는 데 큰 도움이 되는 문서가 된다.
+- **좋은 설계**: 테스트 단위에 대한 고민은 좋은 설계에 대한 사고로 이어진다.
+
+### 테스트 작성 시 중요한 규칙
+
+- 인터페이스 기준으로 테스트하자.
+  - 내부 구현에 대한 의존하지 않는 테스트를 작성한다.
+  - UI와 이벤트를 기준으로 동작을 검증한다.
+- 의미 있는 테스트인지 항상 고민하자.
+  - 커버리지 100%보다 유의미한 기능을 검증할 수 있는지 확인한다.
+- 테스트 코드의 가독성을 생각하자.
+  - 테스트 디스크립션을 명확하게 작성한다.
+  - 하나의 테스트에는 가급적 하나의 동작한 검증한다.
+
+### 어떤 테스트를 배웠을까?
+
+**단위 테스트**
+
+- 앱에서 가장 작은 단위의 기능을 실행해 예상대로 동작하는지 확인하는 테스트
+- 대상: 특정 도메인에 종속되지 않고 독립적으로 실행 가능한 모듈
+  - 공통 컴포넌트, 리액트 훅, 유틸 함수 등
+
+**통합 테스트**
+
+- 두 개 이상의 모듈이 상호작용하며 만들어내는 상태를 검증하는 테스트
+- 실제 앱의 비즈니스 로직과 가깝게 기능을 검증한다.
+- 상태 관리나 API 호출은 상위 컴포넌트로 응집할수록 테스트 범위 분리가 용이하고 코드도 관리하기 좋다.
+
+### 그 과정에서 무엇을 배웠을까?
+
+- Vitest 프레임워크
+- 단언(assertion)
+- 매처(matcher)
+- Setup / Teardown
+- Testing Library
+- 모킹(mocking)과 MSW
+
+### **테스트 피라미드와 테스트 트로피**
+
+- 테스트 비용과 실행 속도를 기준으로 어떻게 테스트를 설계할지 알려주는 모델
+
+**테스트 피라미드**
+
+- 단위 테스트의 비중이 가장 높다.
+  - 단위 테스트는 빠르고 핵심 기능 검증에 용이하다. → 높은 비중
+  - UI나 비즈니스 로직 테스트는 여러 모듈이 얽혀 있어 비용과 시간이 많이 든다. → 상대적으로 낮은 비중
+
+**테스트 트로피**
+
+- 통합 테스트의 비중을 가장 높게 본다.
+- 개별 컴포넌트보다는 앱 전체의 비즈니스 로직 흐름을 제대로 검증하는 게 더 가치 있다고 본다.
+
+**정답은 없다.**
+
+프로젝트의 신뢰성을 높이려면 각 테스트의 장점과 한계를 이해하고, 가장 효율적이고 장기적으로 운영 가능한 방식으로 테스트를 설계해야 한다.
+
+- 공통 컴포넌트나 React Hooks 같은 UIKit 성격의 프로젝트 → 단위 테스트 중심
+- 일반적인 서비스 앱 → 통합 테스트 중심
+
+어떤 대상을 어떤 범위에서 검증하는 것이 효과적인지 계속 고민하는 것이 매우 중요하다. 완벽한 테스트는 없으며, 모든 테스트에는 한계가 존재한다.
+
+결국 중요한 것은 **각 테스트가 검증하는 내용과 한계를 정확하게 이해하고, 프로젝트에 적합한 테스트를 설계해 코드에 대한 신뢰감을 높이는 것**이다.
